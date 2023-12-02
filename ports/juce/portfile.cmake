@@ -8,6 +8,7 @@ vcpkg_from_github(
   "0001-build-allow-setting-JUCE_PLUGINHOST_LADSPA.patch"
   "0002-build-linux-find_packages.patch"
   "0003-build-forward-vcpkg-toolchain.patch"
+  "0004-build-install-paths.patch"
 )
 
 vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
@@ -112,7 +113,7 @@ vcpkg_fixup_pkgconfig()
 vcpkg_copy_pdbs()
 
 # Copy tools
-file(GLOB JUCE_TOOLS "${CURRENT_PACKAGES_DIR}/bin/JUCE-${VERSION}")
+file(GLOB JUCE_TOOLS "${CURRENT_PACKAGES_DIR}/bin/JUCE-${VERSION}/*")
 foreach(JUCE_TOOL_PATH IN LISTS JUCE_TOOLS)
   get_filename_component(JUCE_TOOL "${JUCE_TOOL_PATH}" NAME)
   get_filename_component(JUCE_TOOL_DIR "${JUCE_TOOL_PATH}" DIRECTORY)
