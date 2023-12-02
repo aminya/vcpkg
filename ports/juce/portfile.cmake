@@ -110,6 +110,8 @@ vcpkg_cmake_configure(
 vcpkg_cmake_install()
 vcpkg_fixup_pkgconfig()
 vcpkg_copy_pdbs()
+vcpkg_cmake_config_fixup(CONFIG_PATH "lib/cmake/JUCE-${VERSION}")
+file(COPY "${CURRENT_PACKAGES_DIR}/share/juce" DESTINATION "lib/cmake/JUCE-${VERSION}")
 
 # Copy tools
 file(GLOB JUCE_TOOLS "${CURRENT_PACKAGES_DIR}/bin/JUCE-${VERSION}/*")
