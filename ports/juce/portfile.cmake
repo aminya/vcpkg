@@ -116,7 +116,7 @@ file(GLOB JUCE_TOOLS "${CURRENT_PACKAGES_DIR}/bin/JUCE-${VERSION}/*")
 foreach(JUCE_TOOL_PATH IN LISTS JUCE_TOOLS)
   get_filename_component(JUCE_TOOL "${JUCE_TOOL_PATH}" NAME)
   get_filename_component(JUCE_TOOL_DIR "${JUCE_TOOL_PATH}" DIRECTORY)
-  vcpkg_copy_tools(TOOL_NAMES ${JUCE_TOOL} SEARCH_DIR "${JUCE_TOOL_DIR}" AUTO_CLEAN)
+  vcpkg_copy_tools(TOOL_NAMES ${JUCE_TOOL} SEARCH_DIR "${JUCE_TOOL_DIR}")
 endforeach()
 
 # Copy extras tools
