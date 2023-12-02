@@ -8,7 +8,7 @@ vcpkg_from_github(
   "0001-build-allow-setting-JUCE_PLUGINHOST_LADSPA.patch"
   "0002-build-linux-find_packages.patch"
   "0003-build-forward-vcpkg-toolchain.patch"
-  "0004-build-install-paths.patch"
+  "0004-install-paths.patch"
 )
 
 vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
@@ -108,7 +108,6 @@ vcpkg_cmake_configure(
 )
 
 vcpkg_cmake_install()
-vcpkg_cmake_config_fixup(CONFIG_PATH "lib/cmake/JUCE-${VERSION}")
 vcpkg_fixup_pkgconfig()
 vcpkg_copy_pdbs()
 
@@ -145,10 +144,6 @@ file(REMOVE_RECURSE
 # Remove duplicate debug files
 file(REMOVE_RECURSE
 "${CURRENT_PACKAGES_DIR}/debug/"
-)
-# Remove empty directories
-file(REMOVE_RECURSE
-"${CURRENT_PACKAGES_DIR}/lib"
 )
 
 # Copy license

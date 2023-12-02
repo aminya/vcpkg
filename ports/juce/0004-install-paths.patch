@@ -1,0 +1,15 @@
+diff --git a/extras/Build/juceaide/CMakeLists.txt b/extras/Build/juceaide/CMakeLists.txt
+index f4cdba7f7..fab57fdb4 100644
+--- a/extras/Build/juceaide/CMakeLists.txt
++++ b/extras/Build/juceaide/CMakeLists.txt
+@@ -164,7 +164,7 @@ else()
+
+     add_executable(juce::juceaide ALIAS juceaide)
+
+-    set(JUCE_TOOL_INSTALL_DIR "bin/JUCE-${JUCE_VERSION}" CACHE STRING
++    set(JUCE_TOOL_INSTALL_DIR "tools/juce" CACHE STRING
+         "The location, relative to the install prefix, where juceaide will be installed")
+
+     install(PROGRAMS "${imported_location}" DESTINATION "${JUCE_TOOL_INSTALL_DIR}")
+--
+2.34.1
