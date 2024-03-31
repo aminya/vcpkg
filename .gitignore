@@ -300,7 +300,6 @@ __pycache__/
 !/triplets/x64-windows-static.cmake
 !/triplets/x64-windows.cmake
 !/triplets/x86-windows.cmake
-
 !/triplets/community
 !/triplets/community/**
 
@@ -321,4 +320,3 @@ prefab/
 ###################
 pythonenv3.8/
 .venv/
-
