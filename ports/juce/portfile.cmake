@@ -10,6 +10,7 @@ vcpkg_from_github(
   "0003-build-forward-vcpkg-toolchain.patch"
   "0004-install-paths.patch"
   "0005-feat-add-forEach-method-to-ProcessorChain.patch"
+  "0006-fix-report-load-library-failures-for-the-VST3-sdk.patch"
 )
 
 vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
