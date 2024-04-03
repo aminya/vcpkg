@@ -886,7 +886,7 @@
     },
     "boost-dll": {
       "baseline": "1.85.0",
-      "port-version": 1
+      "port-version": 2
     },
     "boost-dynamic-bitset": {
       "baseline": "1.85.0",
