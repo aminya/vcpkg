@@ -19,11 +19,6 @@
       "version>=": "1.84.0"
     },
     {
-      "name": "boost-filesystem",
-      "platform": "!uwp",
-      "version>=": "1.84.0"
-    },
-    {
       "name": "boost-function",
       "version>=": "1.84.0"
     },
@@ -67,5 +62,20 @@
       "name": "boost-winapi",
       "version>=": "1.84.0"
     }
-  ]
+  ],
+  "default-features": [
+    "boost-filesystem"
+  ],
+  "features": {
+    "boost-filesystem": {
+      "description": "Use boost::filesystem instead of std::filesystem. If disabled, BOOST_DLL_USE_STD_FS should be defined before including any Boos dll headers.",
+      "dependencies": [
+        {
+          "name": "boost-filesystem",
+          "platform": "!uwp",
+          "version>=": "1.84.0"
+        }
+      ]
+    }
+  }
 }
