@@ -18,6 +18,7 @@ vcpkg_from_github(
     avoid-macos-15-deprecations.patch
     0005-feat-add-forEach-method-to-ProcessorChain.patch
     debug-break.patch
+    arm-neon.patch
 )
 file(REMOVE_RECURSE "${SOURCE_PATH}/modules/juce_audio_devices/native/oboe")
 
