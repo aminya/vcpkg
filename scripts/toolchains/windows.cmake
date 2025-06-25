@@ -91,8 +91,8 @@ if(NOT _VCPKG_WINDOWS_TOOLCHAIN)
 
 
     if (CMAKE_CXX_COMPILER STREQUAL "Clang")
-        set(VCPKG_C_FLAGS_RELEASE " -ffile-prefix-map=${CMAKE_BINARY_DIR}=. ${VCPKG_C_FLAGS_RELEASE}")
-        set(VCPKG_CXX_FLAGS_RELEASE " -ffile-prefix-map=${CMAKE_BINARY_DIR}=. ${VCPKG_CXX_FLAGS_RELEASE}")
+        set(VCPKG_C_FLAGS_RELEASE " -flto=thin -ffile-prefix-map=${CMAKE_BINARY_DIR}=. ${VCPKG_C_FLAGS_RELEASE}")
+        set(VCPKG_CXX_FLAGS_RELEASE " -flto=thin -ffile-prefix-map=${CMAKE_BINARY_DIR}=. ${VCPKG_CXX_FLAGS_RELEASE}")
     endif()
 
     set(CMAKE_CXX_FLAGS_DEBUG "${VCPKG_CRT_LINK_FLAG_PREFIX}d /Z7 /Ob0 /Od /RTC1 ${VCPKG_CXX_FLAGS_DEBUG}" CACHE STRING "")
