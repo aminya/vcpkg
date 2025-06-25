@@ -40,6 +40,8 @@ vcpkg_list(SET configure_arguments
     --bindir=bin
     --libdir=lib
     --without-documentation
+    --disable-deprecated-features
+    --lto-cxxflags-to-ldflags
     "--with-external-includedir=${CURRENT_INSTALLED_DIR}/include"
 )
 vcpkg_list(SET pkgconfig_requires)
