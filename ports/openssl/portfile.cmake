@@ -31,6 +31,7 @@ vcpkg_from_github(
         unix/move-openssldir.patch
         unix/no-empty-dirs.patch
         unix/no-static-libs-for-shared.patch
+        no-compiler-info.patch
 )
 
 vcpkg_list(SET CONFIGURE_OPTIONS
