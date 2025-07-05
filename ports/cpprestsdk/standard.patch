@@ -1,0 +1,45 @@
+diff --git a/Release/CMakeLists.txt b/Release/CMakeLists.txt
+index 9ff6d66..b2f5786 100644
+--- a/Release/CMakeLists.txt
++++ b/Release/CMakeLists.txt
+@@ -139,6 +139,10 @@ else()
+   message(FATAL_ERROR "-- Unsupported Build Platform.")
+ endif()
+ 
++if (NOT CMAKE_CXX_STANDARD)
++    set(CMAKE_CXX_STANDARD 11)
++endif()
++
+ # Compiler (not platform) specific settings
+ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR IOS)
+   message("-- Setting clang options")
+@@ -155,12 +159,14 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR IOS)
+     set(OSX_SUPPRESSIONS -Wno-overloaded-virtual -Wno-sign-conversion -Wno-deprecated -Wno-unknown-pragmas -Wno-reorder -Wno-char-subscripts -Wno-switch -Wno-unused-parameter -Wno-unused-variable -Wno-deprecated -Wno-unused-value -Wno-unknown-warning-option -Wno-return-type-c-linkage -Wno-unused-function -Wno-sign-compare -Wno-shorten-64-to-32 -Wno-unused-local-typedefs)
+     set(WARNINGS ${WARNINGS} ${OSX_SUPPRESSIONS})
+ 
+-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -Wno-return-type-c-linkage -Wno-unneeded-internal-declaration")
++    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-return-type-c-linkage -Wno-unneeded-internal-declaration")
++    if (NOT WIN32)
++        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
++    endif()
+     set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
+-    set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++11")
+   endif()
+ 
+-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-strict-aliasing")
++  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-strict-aliasing")
+ 
+ elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+   message("-- Setting gcc options")
+@@ -168,7 +174,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+   set(WARNINGS -Wall -Wextra -Wunused-parameter -Wcast-align -Wcast-qual -Wconversion -Wformat=2 -Winit-self -Winvalid-pch -Wmissing-format-attribute -Wmissing-include-dirs -Wpacked -Wredundant-decls -Wunreachable-code)
+   set(LD_FLAGS "${LD_FLAGS} -Wl,-z,defs")
+ 
+-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-strict-aliasing")
++  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-strict-aliasing")
+   if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.8)
+     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive -D_GLIBCXX_USE_SCHED_YIELD -D_GLIBCXX_USE_NANOSLEEP")
+   endif()
+-- 
+2.50.0.windows.2
+
