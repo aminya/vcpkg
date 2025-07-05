@@ -13,6 +13,8 @@ vcpkg_from_github(
         libcxx-winpthread-fixes.patch
         fix-cmake-usage.patch
         0009-fix-regression-f2bf049-85491b3.patch # extract from PR 4255
+        fix-includes.patch
+        windows-clang.patch
 )
 file(COPY "${CMAKE_CURRENT_LIST_DIR}/configure" DESTINATION "${SOURCE_PATH}")
 
@@ -43,6 +45,7 @@ vcpkg_list(SET configure_arguments
     --disable-deprecated-features
     --lto-cxxflags-to-ldflags
     "--with-external-includedir=${CURRENT_INSTALLED_DIR}/include"
+    "--cc-bin=${VCPKG_DETECTED_CMAKE_CXX_COMPILER}"
 )
 vcpkg_list(SET pkgconfig_requires)
 
@@ -85,10 +88,15 @@ if(VCPKG_TARGET_IS_WINDOWS AND NOT VCPKG_TARGET_IS_MINGW)
         vcpkg_list(APPEND configure_arguments --cc=msvc)
     endif()
 
+    # link rtlib for Clang on Windows
+    if (VCPKG_DETECTED_CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR VCPKG_DETECTED_CMAKE_CXX_COMPILER MATCHES "clang-cl(\.exe)?$")
+        set(VCPKG_DETECTED_CMAKE_CXX_FLAGS "${VCPKG_DETECTED_CMAKE_CXX_FLAGS} -rtlib=compiler-rt")
+    endif()
+
     # When compiling with Clang, -mrdrand is required to enable the RDRAND intrinsics. Botan will
     # check for RDRAND at runtime before trying to use it, so we should be safe to specify this
     # without triggering illegal instruction faults on older CPUs.
-    if(VCPKG_DETECTED_CMAKE_CXX_COMPILER MATCHES "clang-cl(\.exe)?$")
+    if(VCPKG_DETECTED_CMAKE_CXX_COMPILER MATCHES "clang-cl(\.exe)?$" AND NOT VCPKG_TARGET_ARCHITECTURE STREQUAL "arm64")
         vcpkg_list(APPEND configure_arguments "--extra-cxxflags=${VCPKG_DETECTED_CMAKE_CXX_FLAGS} -mrdrnd")
     else()
         # ...otherwise just forward the detected CXXFLAGS.
@@ -105,6 +113,15 @@ if(VCPKG_TARGET_IS_WINDOWS AND NOT VCPKG_TARGET_IS_MINGW)
         set(BOTAN_MSVC_RUNTIME MD)
     else()
         set(BOTAN_MSVC_RUNTIME MT)
+    endif()
+
+    set(EXE_LINK_CMD "\"${VCPKG_DETECTED_CMAKE_LINKER}\" ${VCPKG_LINKER_FLAGS}")
+    if(VCPKG_DETECTED_CMAKE_LINKER MATCHES "lld-link(\.exe)?$")
+        if (VCPKG_DETECTED_CMAKE_CXX_COMPILER MATCHES "clang-cl(\.exe)?$")
+            set(EXE_LINK_CMD "\"${VCPKG_DETECTED_CMAKE_CXX_COMPILER}\" ${VCPKG_LINKER_FLAGS}")
+        else()
+            set(EXE_LINK_CMD "\"${VCPKG_DETECTED_CMAKE_CXX_COMPILER}\" -fuse-ld=lld ${VCPKG_LINKER_FLAGS}")
+        endif()
     endif()
 
     vcpkg_install_nmake(
@@ -128,7 +145,7 @@ if(VCPKG_TARGET_IS_WINDOWS AND NOT VCPKG_TARGET_IS_MINGW)
             "CXX=\"${VCPKG_DETECTED_CMAKE_CXX_COMPILER}\""
             "LINKER=\"${VCPKG_DETECTED_CMAKE_LINKER}\""
             "AR=\"${VCPKG_DETECTED_CMAKE_AR}\""
-            "EXE_LINK_CMD=\"${VCPKG_DETECTED_CMAKE_LINKER}\" ${VCPKG_LINKER_FLAGS}"
+            "EXE_LINK_CMD=${EXE_LINK_CMD}"
         OPTIONS_RELEASE
             "ZLIB_LIBS=${ZLIB_LIBS_RELEASE}"
         OPTIONS_DEBUG

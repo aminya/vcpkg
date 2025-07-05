@@ -1,0 +1,65 @@
+diff --git a/configure.py b/configure.py
+index c0f72df..d680f1f 100644
+--- a/configure.py
++++ b/configure.py
+@@ -1463,7 +1463,21 @@ class CompilerInfo(InfoObject):
+                     abi_link.add(flag)
+ 
+         if options.msvc_runtime:
+-            abi_link.add("/" + options.msvc_runtime)
++            if options.compiler == 'msvc':
++                abi_link.add("/" + options.msvc_runtime)
++            elif options.compiler == 'clang' or options.compiler == 'clang-cl':
++                if options.msvc_runtime == 'MT':
++                    abi_link.add("-fms-runtime-lib=static")
++                elif options.msvc_runtime == 'MTd':
++                    abi_link.add("-fms-runtime-lib=static_dbg")
++                elif options.msvc_runtime == 'MD':
++                    abi_link.add("-fms-runtime-lib=dll")
++                elif options.msvc_runtime == 'MDd':
++                    abi_link.add("-fms-runtime-lib=dll_dbg")
++                else:
++                    abi_link.add("-fms-runtime-lib=" + options.msvc_runtime)
++            else:
++                logging.warning('Not handling msvc runtime %s for %s' % (options.msvc_runtime, options.compiler))
+ 
+         if options.with_stack_protector and self.stack_protector_flags != '':
+             abi_link.add(self.stack_protector_flags)
+@@ -3316,7 +3330,7 @@ def validate_options(options, info_os, info_cc, available_module_policies):
+         logging.warning('The windows target is oriented towards MSVC; maybe you want --os=cygwin or --os=mingw')
+ 
+     if options.msvc_runtime:
+-        if options.compiler != 'msvc':
++        if options.compiler != 'msvc' and options.compiler != 'clang' and options.compiler != 'clang-cl':
+             raise UserError("Makes no sense to specify MSVC runtime for %s" % (options.compiler))
+ 
+         if options.msvc_runtime not in ['MT', 'MD', 'MTd', 'MDd']:
+diff --git a/src/build-data/cc/clang.txt b/src/build-data/cc/clang.txt
+index ee2762b..2f44622 100644
+--- a/src/build-data/cc/clang.txt
++++ b/src/build-data/cc/clang.txt
+@@ -34,7 +34,7 @@ thread    -> "-fsanitize=thread"
+ iterator  -> "-D_LIBCPP_DEBUG=1 -D_GLIBCXX_DEBUG"
+ </sanitizers>
+ 
+-shared_flags "-fPIC"
++shared_flags ""
+ coverage_flags "--coverage"
+ stack_protector_flags "-fstack-protector"
+ 
+@@ -48,10 +48,10 @@ header_deps_flag '-MD'
+ header_deps_out '-MF'
+ 
+ <so_link_commands>
+-macos         -> "{cxx} -dynamiclib -fPIC -install_name {libdir}/{soname_abi} -current_version {macos_so_current_ver} -compatibility_version {macos_so_compat_ver}"
++macos         -> "{cxx} -dynamiclib  -install_name {libdir}/{soname_abi} -current_version {macos_so_current_ver} -compatibility_version {macos_so_compat_ver}"
+ 
+ # The default works for GNU ld and several other Unix linkers
+-default       -> "{cxx} -shared -fPIC -Wl,-soname,{soname_abi}"
++default       -> "{cxx} -shared  -Wl,-soname,{soname_abi}"
+ 
+ mingw         -> "{cxx} -shared -Wl,--out-implib,{shared_lib_name}.a"
+ </so_link_commands>
+-- 
+2.49.0.windows.1
+
