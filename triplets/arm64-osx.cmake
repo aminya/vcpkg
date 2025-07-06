@@ -4,3 +4,5 @@ set(VCPKG_LIBRARY_LINKAGE static)
 
 set(VCPKG_CMAKE_SYSTEM_NAME Darwin)
 set(VCPKG_OSX_ARCHITECTURES arm64)
+
+include(${CMAKE_CURRENT_LIST_DIR}/community/clang.cmake)
