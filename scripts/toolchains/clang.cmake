@@ -1,10 +1,32 @@
 include_guard()
 
-set(LLVM_PATHS
+set(LLVM_PATHS)
+
+# on MacOS 12 and below, use LLVM 17
+if (APPLE)
+    function(detect_macos_version version)
+        find_program(SW_VERS_EXECUTABLE sw_vers)
+        execute_process(
+            COMMAND "${SW_VERS_EXECUTABLE}" -productVersion
+            OUTPUT_VARIABLE MACOS_VERSION
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+        set(${version} "${MACOS_VERSION}" PARENT_SCOPE)
+    endfunction()
+
+    detect_macos_version(MACOS_VERSION)
+    if(MACOS_VERSION VERSION_LESS 13)
+        list(APPEND LLVM_PATHS "/opt/homebrew/opt/llvm@17/bin")
+    endif()
+endif()
+
+list(APPEND LLVM_PATHS 
     "$ENV{LLVM_PATH}/bin"
     "$ENV{LLVMInstallDir}/bin"
     "$ENV{PROGRAMFILES}/LLVM/bin"
+    "/usr/bin"
 )
+
 foreach(LLVM_PATH IN LISTS LLVM_PATHS)
     if(EXISTS "${LLVM_PATH}")
         list(INSERT CMAKE_PROGRAM_PATH 0 "${LLVM_PATH}")
