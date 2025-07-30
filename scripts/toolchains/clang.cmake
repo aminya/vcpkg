@@ -1,13 +1,35 @@
 include_guard()
 
-set(LLVM_PATHS
+
+function(detect_macos_version version)
+    if (APPLE)
+        find_program(SW_VERS_EXECUTABLE sw_vers)
+        execute_process(
+            COMMAND "${SW_VERS_EXECUTABLE}" -productVersion
+            OUTPUT_VARIABLE MACOS_VERSION
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+        set(${version} "${MACOS_VERSION}" PARENT_SCOPE)
+    endif()
+endfunction()
+
+detect_macos_version(MACOS_VERSION)
+
+set(LLVM_BIN_PATHS)
+
+list(APPEND LLVM_BIN_PATHS 
+    "$ENV{VCPKG_LLVM_PATH}/bin"
     "$ENV{LLVM_PATH}/bin"
     "$ENV{LLVMInstallDir}/bin"
     "$ENV{PROGRAMFILES}/LLVM/bin"
+    "/usr/bin"
 )
-foreach(LLVM_PATH IN LISTS LLVM_PATHS)
-    if(EXISTS "${LLVM_PATH}")
-        list(INSERT CMAKE_PROGRAM_PATH 0 "${LLVM_PATH}")
+
+set(LLVM_LIB_PATHS)
+foreach(LLVM_BIN_PATH IN LISTS LLVM_BIN_PATHS)
+    if(EXISTS "${LLVM_BIN_PATH}/clang++${CMAKE_EXECUTABLE_SUFFIX}")
+        list(INSERT CMAKE_PROGRAM_PATH 0 "${LLVM_BIN_PATH}")
+        list(APPEND LLVM_LIB_PATHS "${LLVM_BIN_PATH}/../lib/c++" "${LLVM_BIN_PATH}/../lib")
         break()
     endif()
 endforeach()
@@ -36,7 +58,7 @@ set(CMAKE_CXX_COMPILER "${CLANGPP_EXECUTBALE}" CACHE STRING "" FORCE)
 
 if (NOT CLANGCL_EXECUTBALE AND NOT "${VCPKG_NO_LLVM_TOOLS}" STREQUAL "ON")
     find_program(LLD_LINKER NAMES "lld"
-        PATHS ${LLVM_PATHS}
+        PATHS ${LLVM_BIN_PATHS}
         DOC "LLD linker executable"
     )
     if(LLD_LINKER)
@@ -76,11 +98,26 @@ else()
     set(VCPKG_CXX_FLAGS " ${VCPKG_CCXX_FLAGS} ${VCPKG_CXX_FLAGS} ")
 endif()
 
+# Link the LLVM's libc++
+if(APPLE AND MACOS_VERSION VERSION_LESS 13)
+    foreach(LLVM_LIB_PATH IN LISTS LLVM_LIB_PATHS)
+        if(EXISTS "${LLVM_LIB_PATH}")
+            # resolve the path to the libc++ and libc++abi
+            cmake_path(ABSOLUTE_PATH LLVM_LIB_PATH NORMALIZE OUTPUT_VARIABLE LLVM_LIB_PATH)
+            set(VCPKG_CXX_FLAGS " ${VCPKG_CXX_FLAGS} -Wl,${LLVM_LIB_PATH}/libc++.a,${LLVM_LIB_PATH}/libc++abi.a ")
+            set(VCPKG_C_FLAGS " ${VCPKG_C_FLAGS} -Wl,${LLVM_LIB_PATH}/libc++.a,${LLVM_LIB_PATH}/libc++abi.a ")
+            break()
+        endif()
+    endforeach()
+endif()
+
 # Release flags
-set(VCPKG_CXX_FLAGS_RELEASE " ${VCPKG_CXX_FLAGS} -flto=thin ")
-set(VCPKG_C_FLAGS_RELEASE " ${VCPKG_C_FLAGS} -flto=thin ")
-if (NOT "${VCPKG_NO_LLVM_TOOLS}" STREQUAL "ON")
-    set(VCPKG_DETECTED_CMAKE_SHARED_LINKER_FLAGS " ${VCPKG_DETECTED_CMAKE_SHARED_LINKER_FLAGS} -flto=thin ")
-    set(VCPKG_DETECTED_CMAKE_STATIC_LINKER_FLAGS " ${VCPKG_DETECTED_CMAKE_STATIC_LINKER_FLAGS} -flto=thin ")
-    set(VCPKG_DETECTED_CMAKE_EXE_LINKER_FLAGS " ${VCPKG_DETECTED_CMAKE_EXE_LINKER_FLAGS} -flto=thin ")
+if(NOT APPLE OR NOT MACOS_VERSION VERSION_LESS 13)
+    set(VCPKG_CXX_FLAGS_RELEASE " ${VCPKG_CXX_FLAGS} -flto=thin ")
+    set(VCPKG_C_FLAGS_RELEASE " ${VCPKG_C_FLAGS} -flto=thin ")
+    if (NOT "${VCPKG_NO_LLVM_TOOLS}" STREQUAL "ON")
+        set(VCPKG_DETECTED_CMAKE_SHARED_LINKER_FLAGS " ${VCPKG_DETECTED_CMAKE_SHARED_LINKER_FLAGS} -flto=thin ")
+        set(VCPKG_DETECTED_CMAKE_STATIC_LINKER_FLAGS " ${VCPKG_DETECTED_CMAKE_STATIC_LINKER_FLAGS} -flto=thin ")
+        set(VCPKG_DETECTED_CMAKE_EXE_LINKER_FLAGS " ${VCPKG_DETECTED_CMAKE_EXE_LINKER_FLAGS} -flto=thin ")
+    endif()
 endif()
