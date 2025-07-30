@@ -1,10 +1,8 @@
 include_guard()
 
-set(LLVM_PATHS)
 
-# on MacOS 12 and below, use LLVM 17
-if (APPLE)
-    function(detect_macos_version version)
+function(detect_macos_version version)
+    if (APPLE)
         find_program(SW_VERS_EXECUTABLE sw_vers)
         execute_process(
             COMMAND "${SW_VERS_EXECUTABLE}" -productVersion
@@ -12,24 +10,29 @@ if (APPLE)
             OUTPUT_STRIP_TRAILING_WHITESPACE
         )
         set(${version} "${MACOS_VERSION}" PARENT_SCOPE)
-    endfunction()
-
-    detect_macos_version(MACOS_VERSION)
-    if(MACOS_VERSION VERSION_LESS 13)
-        list(APPEND LLVM_PATHS "/opt/homebrew/opt/llvm@17/bin")
     endif()
+endfunction()
+
+detect_macos_version(MACOS_VERSION)
+
+set(LLVM_BIN_PATHS)
+
+# on MacOS 12 and below, prefer LLVM 17
+if(APPLE AND MACOS_VERSION VERSION_LESS 13)
+    list(APPEND LLVM_BIN_PATHS "/opt/homebrew/opt/llvm@17/bin")
 endif()
 
-list(APPEND LLVM_PATHS 
+list(APPEND LLVM_BIN_PATHS 
+    "$ENV{VCPKG_LLVM_PATH}/bin"
     "$ENV{LLVM_PATH}/bin"
     "$ENV{LLVMInstallDir}/bin"
     "$ENV{PROGRAMFILES}/LLVM/bin"
     "/usr/bin"
 )
 
-foreach(LLVM_PATH IN LISTS LLVM_PATHS)
-    if(EXISTS "${LLVM_PATH}")
-        list(INSERT CMAKE_PROGRAM_PATH 0 "${LLVM_PATH}")
+foreach(LLVM_BIN_PATH IN LISTS LLVM_BIN_PATHS)
+    if(EXISTS "${LLVM_BIN_PATH}/clang++${CMAKE_EXECUTABLE_SUFFIX}")
+        list(INSERT CMAKE_PROGRAM_PATH 0 "${LLVM_BIN_PATH}")
         break()
     endif()
 endforeach()
@@ -58,7 +61,7 @@ set(CMAKE_CXX_COMPILER "${CLANGPP_EXECUTBALE}" CACHE STRING "" FORCE)
 
 if (NOT CLANGCL_EXECUTBALE AND NOT "${VCPKG_NO_LLVM_TOOLS}" STREQUAL "ON")
     find_program(LLD_LINKER NAMES "lld"
-        PATHS ${LLVM_PATHS}
+        PATHS ${LLVM_BIN_PATHS}
         DOC "LLD linker executable"
     )
     if(LLD_LINKER)
@@ -99,10 +102,12 @@ else()
 endif()
 
 # Release flags
-set(VCPKG_CXX_FLAGS_RELEASE " ${VCPKG_CXX_FLAGS} -flto=thin ")
-set(VCPKG_C_FLAGS_RELEASE " ${VCPKG_C_FLAGS} -flto=thin ")
-if (NOT "${VCPKG_NO_LLVM_TOOLS}" STREQUAL "ON")
-    set(VCPKG_DETECTED_CMAKE_SHARED_LINKER_FLAGS " ${VCPKG_DETECTED_CMAKE_SHARED_LINKER_FLAGS} -flto=thin ")
-    set(VCPKG_DETECTED_CMAKE_STATIC_LINKER_FLAGS " ${VCPKG_DETECTED_CMAKE_STATIC_LINKER_FLAGS} -flto=thin ")
-    set(VCPKG_DETECTED_CMAKE_EXE_LINKER_FLAGS " ${VCPKG_DETECTED_CMAKE_EXE_LINKER_FLAGS} -flto=thin ")
+if(NOT APPLE OR NOT MACOS_VERSION VERSION_LESS 13)
+    set(VCPKG_CXX_FLAGS_RELEASE " ${VCPKG_CXX_FLAGS} -flto=thin ")
+    set(VCPKG_C_FLAGS_RELEASE " ${VCPKG_C_FLAGS} -flto=thin ")
+    if (NOT "${VCPKG_NO_LLVM_TOOLS}" STREQUAL "ON")
+        set(VCPKG_DETECTED_CMAKE_SHARED_LINKER_FLAGS " ${VCPKG_DETECTED_CMAKE_SHARED_LINKER_FLAGS} -flto=thin ")
+        set(VCPKG_DETECTED_CMAKE_STATIC_LINKER_FLAGS " ${VCPKG_DETECTED_CMAKE_STATIC_LINKER_FLAGS} -flto=thin ")
+        set(VCPKG_DETECTED_CMAKE_EXE_LINKER_FLAGS " ${VCPKG_DETECTED_CMAKE_EXE_LINKER_FLAGS} -flto=thin ")
+    endif()
 endif()
