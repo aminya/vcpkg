@@ -17,11 +17,6 @@ detect_macos_version(MACOS_VERSION)
 
 set(LLVM_BIN_PATHS)
 
-# on MacOS 12 and below, prefer LLVM 17
-if(APPLE AND MACOS_VERSION VERSION_LESS 13)
-    list(APPEND LLVM_BIN_PATHS "/opt/homebrew/opt/llvm@17/bin")
-endif()
-
 list(APPEND LLVM_BIN_PATHS 
     "$ENV{VCPKG_LLVM_PATH}/bin"
     "$ENV{LLVM_PATH}/bin"
@@ -30,9 +25,11 @@ list(APPEND LLVM_BIN_PATHS
     "/usr/bin"
 )
 
+set(LLVM_LIB_PATHS)
 foreach(LLVM_BIN_PATH IN LISTS LLVM_BIN_PATHS)
     if(EXISTS "${LLVM_BIN_PATH}/clang++${CMAKE_EXECUTABLE_SUFFIX}")
         list(INSERT CMAKE_PROGRAM_PATH 0 "${LLVM_BIN_PATH}")
+        list(APPEND LLVM_LIB_PATHS "${LLVM_BIN_PATH}/../lib/c++" "${LLVM_BIN_PATH}/../lib")
         break()
     endif()
 endforeach()
@@ -99,6 +96,19 @@ if(WIN32)
 else()
     set(VCPKG_C_FLAGS " ${VCPKG_CCXX_FLAGS} ${VCPKG_C_FLAGS} ")
     set(VCPKG_CXX_FLAGS " ${VCPKG_CCXX_FLAGS} ${VCPKG_CXX_FLAGS} ")
+endif()
+
+# Link the LLVM's libc++
+if(APPLE AND MACOS_VERSION VERSION_LESS 13)
+    foreach(LLVM_LIB_PATH IN LISTS LLVM_LIB_PATHS)
+        if(EXISTS "${LLVM_LIB_PATH}")
+            # resolve the path to the libc++ and libc++abi
+            cmake_path(ABSOLUTE_PATH LLVM_LIB_PATH NORMALIZE OUTPUT_VARIABLE LLVM_LIB_PATH)
+            set(VCPKG_CXX_FLAGS " ${VCPKG_CXX_FLAGS} -Wl,${LLVM_LIB_PATH}/libc++.a,${LLVM_LIB_PATH}/libc++abi.a ")
+            set(VCPKG_C_FLAGS " ${VCPKG_C_FLAGS} -Wl,${LLVM_LIB_PATH}/libc++.a,${LLVM_LIB_PATH}/libc++abi.a ")
+            break()
+        endif()
+    endforeach()
 endif()
 
 # Release flags
