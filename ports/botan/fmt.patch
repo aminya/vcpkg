@@ -1,0 +1,76 @@
+From da2f62f8f9af6df6591ae11b530489651eefdbda Mon Sep 17 00:00:00 2001
+From: Amin Ya <aminyahyaabadi74@gmail.com>
+Date: Tue, 12 Aug 2025 19:38:30 -0700
+Subject: [PATCH] message
+
+---
+ src/lib/utils/fmt.h | 42 ++++++++----------------------------------
+ 1 file changed, 8 insertions(+), 34 deletions(-)
+
+diff --git a/src/lib/utils/fmt.h b/src/lib/utils/fmt.h
+index e08bf4f..fbfd49f 100644
+--- a/src/lib/utils/fmt.h
++++ b/src/lib/utils/fmt.h
+@@ -7,37 +7,11 @@
+ #ifndef BOTAN_UTIL_FMT_H_
+ #define BOTAN_UTIL_FMT_H_
+ 
+-#include <botan/types.h>
+-#include <locale>
+-#include <sstream>
+-#include <string>
+-#include <string_view>
++#define FMT_HEADER_ONLY
+ 
+-namespace Botan {
+-
+-namespace fmt_detail {
+-
+-inline void do_fmt(std::ostringstream& oss, std::string_view format) {
+-   oss << format;
+-}
+-
+-template <typename T, typename... Ts>
+-void do_fmt(std::ostringstream& oss, std::string_view format, const T& val, const Ts&... rest) {
+-   size_t i = 0;
++#include <fmt/ostream.h>
+ 
+-   while(i < format.size()) {
+-      if(format[i] == '{' && (format.size() > (i + 1)) && format.at(i + 1) == '}') {
+-         oss << val;
+-         return do_fmt(oss, format.substr(i + 2), rest...);
+-      } else {
+-         oss << format[i];
+-      }
+-
+-      i += 1;
+-   }
+-}
+-
+-}  // namespace fmt_detail
++namespace Botan {
+ 
+ /**
+ * Simple formatter utility.
+@@ -51,12 +25,12 @@ void do_fmt(std::ostringstream& oss, std::string_view format, const T& val, cons
+ */
+ template <typename... T>
+ std::string fmt(std::string_view format, const T&... args) {
+-   std::ostringstream oss;
+-   oss.imbue(std::locale::classic());
+-   fmt_detail::do_fmt(oss, format, args...);
+-   return oss.str();
++   auto streamed_args = std::make_tuple(fmt::streamed(args)...);
++   return std::apply([&format](auto&... streamed) {
++      return fmt::vformat(format, fmt::make_format_args(streamed...));
++   }, streamed_args);
+ }
+ 
+ }  // namespace Botan
+ 
+-#endif
+\ No newline at end of file
++#endif
+-- 
+2.37.1 (Apple Git-137.1)
+

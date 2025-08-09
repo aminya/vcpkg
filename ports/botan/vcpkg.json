@@ -6,6 +6,7 @@
   "license": "BSD-2-Clause",
   "supports": "!uwp",
   "dependencies": [
+    "fmt",
     {
       "name": "vcpkg-cmake-config",
       "host": true

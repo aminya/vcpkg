@@ -15,6 +15,7 @@ vcpkg_from_github(
         0009-fix-regression-f2bf049-85491b3.patch # extract from PR 4255
         fix-includes.patch
         windows-clang.patch
+        fmt.patch
 )
 file(COPY "${CMAKE_CURRENT_LIST_DIR}/configure" DESTINATION "${SOURCE_PATH}")
 
