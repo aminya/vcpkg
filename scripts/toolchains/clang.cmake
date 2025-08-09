@@ -58,7 +58,7 @@ endif()
 # File map for debug, macros
 cmake_path(GET CMAKE_BINARY_DIR PARENT_PATH CMAKE_BINARY_DIR_DIR)
 cmake_path(GET CMAKE_BINARY_DIR_DIR PARENT_PATH CMAKE_BUILDTREES_DIR)
-set(VCPKG_CCXX_FLAGS " ${VCPKG_CCXX_FLAGS} -ffile-prefix-map=${CMAKE_BINARY_DIR}=. -ffile-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=. -ffile-prefix-map=${CMAKE_SOURCE_DIR}=. -ffile-prefix-map=$ENV{HOME}=. -ffile-prefix-map=${CMAKE_BUILDTREES_DIR}=.")
+set(VCPKG_CXX_FLAGS_RELEASE " ${VCPKG_CXX_FLAGS_RELEASE} -ffile-prefix-map=${CMAKE_BINARY_DIR}=. -ffile-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=. -ffile-prefix-map=${CMAKE_SOURCE_DIR}=. -ffile-prefix-map=$ENV{HOME}=. -ffile-prefix-map=${CMAKE_BUILDTREES_DIR}=.")
 
 # Language flags
 set(CMAKE_C_STANDARD 17 CACHE STRING "" FORCE)
