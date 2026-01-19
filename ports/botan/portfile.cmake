@@ -90,17 +90,14 @@ if(VCPKG_TARGET_IS_WINDOWS AND NOT VCPKG_TARGET_IS_MINGW)
 
     # link rtlib for Clang on Windows
     if (VCPKG_DETECTED_CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR VCPKG_DETECTED_CMAKE_CXX_COMPILER MATCHES "clang-cl(\.exe)?$")
-        set(VCPKG_DETECTED_CMAKE_CXX_FLAGS "${VCPKG_DETECTED_CMAKE_CXX_FLAGS} -rtlib=compiler-rt")
+        set(cxx_flags "-rtlib=compiler-rt")
     endif()
 
     # When compiling with Clang, -mrdrand is required to enable the RDRAND intrinsics. Botan will
     # check for RDRAND at runtime before trying to use it, so we should be safe to specify this
     # without triggering illegal instruction faults on older CPUs.
     if(VCPKG_DETECTED_CMAKE_CXX_COMPILER MATCHES "clang-cl(\.exe)?$" AND NOT VCPKG_TARGET_ARCHITECTURE STREQUAL "arm64")
-        vcpkg_list(APPEND configure_arguments "--extra-cxxflags=${VCPKG_DETECTED_CMAKE_CXX_FLAGS} -mrdrnd")
-    else()
-        # ...otherwise just forward the detected CXXFLAGS.
-        vcpkg_list(APPEND configure_arguments "--extra-cxxflags=${VCPKG_DETECTED_CMAKE_CXX_FLAGS}")
+        set(cxx_flags " ${cxx_flags} -mrdrnd")
     endif()
 
     if(VCPKG_LIBRARY_LINKAGE STREQUAL "dynamic")
@@ -124,6 +121,9 @@ if(VCPKG_TARGET_IS_WINDOWS AND NOT VCPKG_TARGET_IS_MINGW)
         endif()
     endif()
 
+    vcpkg_list(SET configure_arguments_release "--extra-cxxflags=${VCPKG_COMBINED_CXX_FLAGS_RELEASE} ${cxx_flags}")
+    vcpkg_list(SET configure_arguments_debug "--extra-cxxflags=${VCPKG_COMBINED_CXX_FLAGS_DEBUG} ${cxx_flags}")
+
     vcpkg_install_nmake(
         SOURCE_PATH "${SOURCE_PATH}"
         PROJECT_NAME "Makefile"
@@ -131,12 +131,14 @@ if(VCPKG_TARGET_IS_WINDOWS AND NOT VCPKG_TARGET_IS_MINGW)
         PRERUN_SHELL_RELEASE
             "${PYTHON3}" "${SOURCE_PATH}/configure.py"
             ${configure_arguments}
+            ${configure_arguments_release}
             "--prefix=${CURRENT_PACKAGES_DIR}"
             "--msvc-runtime=${BOTAN_MSVC_RUNTIME}"
             "--with-external-libdir=${CURRENT_INSTALLED_DIR}/lib"
         PRERUN_SHELL_DEBUG
             "${PYTHON3}" "${SOURCE_PATH}/configure.py"
             ${configure_arguments}
+            ${configure_arguments_debug}
             "--prefix=${CURRENT_PACKAGES_DIR}/debug"
             "--msvc-runtime=${BOTAN_MSVC_RUNTIME}d"
             "--with-external-libdir=${CURRENT_INSTALLED_DIR}/debug/lib"
@@ -169,6 +171,10 @@ else()
     elseif(VCPKG_DETECTED_CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         vcpkg_list(APPEND configure_arguments --cc=clang)
     endif()
+
+    vcpkg_list(SET configure_arguments_release "--extra-cxxflags=${VCPKG_COMBINED_CXX_FLAGS_RELEASE}")
+    vcpkg_list(SET configure_arguments_debug "--extra-cxxflags=${VCPKG_COMBINED_CXX_FLAGS_DEBUG}")
+
     # botan's install.py doesn't handle DESTDIR on windows host,
     # so we must avoid the standard '--prefix' and 'DESTDIR' install.
     vcpkg_configure_make(
@@ -181,10 +187,12 @@ else()
         OPTIONS_RELEASE
             "--prefix=${CURRENT_PACKAGES_DIR}"
             "--with-external-libdir=${CURRENT_INSTALLED_DIR}/lib"
+            ${configure_arguments_release}
         OPTIONS_DEBUG
             --debug-mode
             "--prefix=${CURRENT_PACKAGES_DIR}/debug"
             "--with-external-libdir=${CURRENT_INSTALLED_DIR}/debug/lib"
+            ${configure_arguments_debug}
     )
     vcpkg_build_make(
         BUILD_TARGET install
